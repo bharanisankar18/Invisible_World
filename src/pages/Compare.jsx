@@ -1,89 +1,78 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { COMPARE } from "../data/catalog.js";
+import { sci } from "../lib/format.js";
 
 const ease = [0.16, 1, 0.3, 1];
 
-const BAR_COLORS = [
-  "from-emerald-400 to-emerald-600",
-  "from-cyan-400 to-blue-500",
-  "from-blue-400 to-indigo-500",
-  "from-indigo-400 to-purple-500",
-  "from-purple-400 to-violet-500",
-  "from-amber-400 to-orange-500",
-];
+function ratioLabel(n) {
+  if (n < 1.5) return "reference";
+  return `${Math.round(n).toLocaleString("en-US")}× narrower`;
+}
 
 export default function Compare() {
-  const max = Math.log10(COMPARE[0].meters);
+  const reduce = useReducedMotion();
+  const ref = COMPARE[0].meters;
+  const max = Math.log10(ref);
   const min = Math.log10(COMPARE[COMPARE.length - 1].meters);
+  const atom = COMPARE[COMPARE.length - 1];
 
   return (
     <div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease }}
-      >
-        <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-[11px] font-medium tracking-wider uppercase text-accent/80">
-          <span className="text-sm">⇔</span>
-          Compare scale
-        </span>
-        <h1 className="display mt-6 text-[clamp(2.5rem,5vw+1rem,4.5rem)]">
-          Hair to <span className="gradient-text">atom</span>
-        </h1>
-        <p className="mt-4 max-w-[54ch] text-lg text-muted leading-relaxed">
-          Linear bars would hide everything smaller than a cell. These bars use a logarithmic width so an atom can sit on the same page as a hair.
+      <header className="max-w-[60ch]">
+        <p className="eyebrow">Compare · logarithmic</p>
+        <h1 className="display h1 mt-6">Hair to atom</h1>
+        <p className="mt-6 text-lg text-muted">
+          Linear bars would hide everything smaller than a cell. Each bar here is scaled by log₁₀ of its width, so an atom
+          and a hair fit on one page.
         </p>
-      </motion.div>
+      </header>
 
-      <ul className="mt-20 space-y-10">
-        {COMPARE.map((row, i) => {
-          const t = (Math.log10(row.meters) - min) / (max - min);
-          const width = 8 + t * 92;
-          return (
-            <motion.li
-              key={row.id}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.08, ease }}
-            >
-              <div className="flex items-baseline justify-between gap-4">
-                <h2 className="text-xl font-semibold text-ink">{row.name}</h2>
-                <span className="shrink-0 font-mono text-sm tabular text-accent glow-text">
-                  {row.meters.toExponential(0)} m
-                </span>
-              </div>
-              <div className="mt-4 h-4 rounded-full bg-white/[0.03] overflow-hidden">
-                <motion.div
-                  className={`h-full rounded-full bg-gradient-to-r ${BAR_COLORS[i] || BAR_COLORS[0]}`}
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${width}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, delay: i * 0.1, ease }}
-                  style={{
-                    boxShadow: "0 0 12px rgba(56, 189, 248, 0.15)",
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-sm text-muted/60">{row.note}</p>
-            </motion.li>
-          );
-        })}
-      </ul>
+      <div className="mt-20 border-t border-line">
+        <div className="hidden grid-cols-12 gap-6 border-b border-line py-3 md:grid">
+          <span className="eyebrow col-span-3">Object</span>
+          <span className="eyebrow col-span-6">log₁₀ width</span>
+          <span className="eyebrow col-span-3 text-right">vs hair</span>
+        </div>
+        <ul>
+          {COMPARE.map((row, i) => {
+            const t = (Math.log10(row.meters) - min) / (max - min);
+            const width = 6 + t * 94;
+            return (
+              <li key={row.id} className="grid items-center gap-x-6 gap-y-3 border-b border-line py-6 md:grid-cols-12">
+                <div className="md:col-span-3">
+                  <h2 className="text-lg font-medium">{row.name}</h2>
+                  <p className="text-sm text-muted">{row.note}</p>
+                </div>
+                <div className="md:col-span-6">
+                  <div className="h-3 w-full bg-surface" role="presentation">
+                    <motion.div
+                      className="h-full origin-left bg-accent"
+                      style={{ width: `${width}%`, opacity: 0.35 + t * 0.65 }}
+                      initial={reduce ? false : { scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.52, delay: i * 0.06, ease }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 font-mono text-sm tabular md:col-span-3 md:flex-col md:items-end md:gap-1">
+                  <span className="text-accent">{sci(row.meters)}</span>
+                  <span className="text-muted">{ratioLabel(ref / row.meters)}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.5 }}
-        className="mt-16 rounded-2xl glass-card p-6"
-      >
-        <p className="text-sm text-muted/70 leading-relaxed">
-          <span className="text-accent/60 font-medium">Note:</span> A hair is about 800 hydrogen-atom-widths
-          of 0.1 nm if you stack them across 80 µm — actually about 800,000.
-          Logarithmic thinking is the point of this page.
+      <aside className="panel mt-16 max-w-[70ch] p-6">
+        <p className="illustrative">Typical values, not measurements</p>
+        <p className="mt-3 text-muted">
+          Stack hydrogen-scale atoms ({sci(atom.meters)}) across one 80 µm hair and you need about{" "}
+          <span className="font-mono tabular text-ink">{Math.round(ref / atom.meters).toLocaleString("en-US")}</span> of
+          them side by side.
         </p>
-      </motion.div>
+      </aside>
     </div>
   );
 }

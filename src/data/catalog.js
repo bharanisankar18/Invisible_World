@@ -239,7 +239,7 @@ export const OBJECTS = [
       "Avogadro’s number (~6.022 × 10²³) counts molecules in a mole.",
       "Molecular shape, not just formula, decides smell, drug binding and material strength.",
     ],
-    related: ["atom", "protein", "water-scale"],
+    related: ["atom", "protein", "molecular-structure"],
     mysteryPrompt: "A bent trio of atoms, about 0.27 nanometres across, that makes liquid water.",
   },
   {
@@ -623,4 +623,10 @@ export function searchCatalog(q) {
       .toLowerCase();
     return blob.includes(s);
   });
+}
+
+/** "01"…"05" — zones are identified by order and scale, not by hue or emoji. */
+export function zoneNumber(id) {
+  const i = ZONES.findIndex((z) => z.id === id);
+  return i < 0 ? "··" : String(i + 1).padStart(2, "0");
 }

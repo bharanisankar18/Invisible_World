@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import { searchCatalog } from "../data/catalog.js";
 import ObjectCard from "../components/ObjectCard.jsx";
 
-const ease = [0.16, 1, 0.3, 1];
+const SUGGESTIONS = ["DNA", "neuron", "tesla", "virus", "orbital"];
 
 export default function Search() {
   const [params] = useSearchParams();
@@ -13,42 +12,37 @@ export default function Search() {
 
   return (
     <div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease }}
-      >
-        <h1 className="display text-[clamp(2.5rem,4vw+1rem,4rem)]">
-          Search
-        </h1>
-        <p className="mt-3 text-muted">
-          Query: <span className="text-accent font-medium">{q || "empty"}</span>
-          {results.length > 0 && (
-            <span className="ml-2 text-muted/50">· {results.length} result{results.length !== 1 ? "s" : ""}</span>
-          )}
-        </p>
-      </motion.div>
+      <p className="eyebrow">Search</p>
+      <h1 className="display mt-4 text-[clamp(2.5rem,4vw+1rem,4rem)]">{q ? `“${q}”` : "Search the catalogue"}</h1>
+      <p className="mt-4 font-mono text-sm tabular text-muted" aria-live="polite">
+        {results.length} {results.length === 1 ? "match" : "matches"}
+      </p>
 
       {results.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5, ease }}
-          className="mt-16 flex flex-col items-center justify-center text-center rounded-3xl glass-card p-16"
-        >
-          <div className="text-5xl opacity-30 mb-6">🔍</div>
-          <p className="text-lg text-muted">No catalogue match.</p>
-          <p className="mt-2 text-sm text-muted/50">Try DNA, neuron, tesla, or virus.</p>
-          <Link to="/zones" className="btn-primary mt-8">
-            Browse zones
+        <div className="mt-16 border-t border-line pt-10">
+          <p className="text-lg">No catalogue entry mentions that term.</p>
+          <p className="mt-2 text-muted">Try one of these:</p>
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {SUGGESTIONS.map((s) => (
+              <li key={s}>
+                <Link to={`/search?q=${encodeURIComponent(s)}`} className="btn-secondary min-h-11 px-4 text-sm">
+                  {s}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link to="/zones" className="text-link mt-10">
+            Or browse the five zones
           </Link>
-        </motion.div>
-      ) : (
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((o, i) => (
-            <ObjectCard key={o.id} object={o} index={i} />
-          ))}
         </div>
+      ) : (
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {results.map((o) => (
+            <li key={o.id}>
+              <ObjectCard object={o} />
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

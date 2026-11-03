@@ -1,12 +1,18 @@
+import { createContext, useContext } from "react";
+
+const LabelOverride = createContext(null);
+
 function Svg({ children, label }) {
+  const override = useContext(LabelOverride);
   return (
-    <svg viewBox="0 0 200 200" className="h-full w-full" role="img" aria-label={label}>
+    <svg viewBox="0 0 200 200" className="h-full w-full" role="img" aria-label={override || label}>
       {children}
     </svg>
   );
 }
 
-export default function ObjectViz({ type, className = "" }) {
+/** `label` overrides the accessible name (e.g. to hide the answer in Mystery). */
+export default function ObjectViz({ type, className = "", label = null }) {
   const stroke = "#4DB2FF";
   const dim = "#9AA9C2";
   const fill = "rgba(77,178,255,0.12)";
@@ -256,5 +262,9 @@ export default function ObjectViz({ type, className = "" }) {
     ),
   };
 
-  return <div className={className}>{map[type] || map.atom}</div>;
+  return (
+    <LabelOverride.Provider value={label}>
+      <div className={className}>{map[type] || map.atom}</div>
+    </LabelOverride.Provider>
+  );
 }

@@ -1,4 +1,4 @@
-import { OBJECTS, ZONES, getObject } from "../data/catalog.js";
+import { OBJECTS, getObject } from "../data/catalog.js";
 
 const DISCLAIMER =
   "Established teaching facts from the on-site catalogue. Simplified. Not a substitute for a textbook or clinical advice. Simulations are hypothetical.";
@@ -42,8 +42,6 @@ function simulate(object, message) {
 
 export function localAgentReply({ message, mode, context }) {
   const object = context?.objectId ? getObject(context.objectId) : null;
-  const zone = ZONES.find((z) => z.id === context?.zoneId);
-  void zone;
   const tool = mode || "discover";
   let reply;
   if (tool === "connect") reply = connect(object);
@@ -52,22 +50,22 @@ export function localAgentReply({ message, mode, context }) {
   else if (tool === "simulate") reply = simulate(object, message);
   else reply = discover(object, message);
 
-  const lower = message.toLowerCase();
+  const lower = (message || "").toLowerCase();
   if (lower.includes("see atom") || lower.includes("can't we see") || lower.includes("cannot see")) {
     reply +=
       "\n\nWhy atoms are invisible: visible light is ~400–700 nm. An atom is ~0.1 nm. Diffraction bars ordinary optics. STM and TEM are different instruments, not 'better eyes'.";
   }
   if (lower.includes("neuron")) {
     const n = getObject("neuron");
-    reply += `\n\n${n.facts[0]} ${n.structure}`;
+    if (n) reply += `\n\n${n.facts[0]} ${n.structure}`;
   }
   if (lower.includes("magnetic") || lower.includes("magnet")) {
     const m = getObject("magnetism");
-    reply += `\n\n${m.description}`;
+    if (m) reply += `\n\n${m.description}`;
   }
   if (lower.includes("human cell") || lower.includes("inside a")) {
     const c = getObject("eukaryotic-cell");
-    reply += `\n\n${c.description}`;
+    if (c) reply += `\n\n${c.description}`;
   }
 
   return { reply, disclaimer: DISCLAIMER, tool };

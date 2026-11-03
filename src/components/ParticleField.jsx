@@ -1,6 +1,12 @@
 import { useEffect, useRef } from "react";
 
-export default function ParticleField() {
+/*
+ * Signature move (DESIGN.md): a sparse azure particle field behind the landing
+ * headline that drifts, decelerates, then holds still. One hue, no glow.
+ */
+const SETTLE_MS = 4200;
+
+export default function ParticleField({ count = 46 }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -8,27 +14,16 @@ export default function ParticleField() {
     if (!canvas) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const ctx = canvas.getContext("2d");
-    let frame;
-    let running = true;
-    let mouse = { x: -1, y: -1 };
+    let frame = 0;
+    let start = 0;
 
-    const COLORS = [
-      "56, 189, 248",  // cyan
-      "129, 140, 248",  // indigo
-      "167, 139, 250",  // purple
-      "52, 211, 153",   // emerald (rare)
-    ];
-
-    const dots = Array.from({ length: reduce ? 30 : 120 }, () => ({
+    const dots = Array.from({ length: count }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: 0.5 + Math.random() * 2,
-      v: 0.0001 + Math.random() * 0.0003,
-      vx: (Math.random() - 0.5) * 0.0002,
-      phase: Math.random() * Math.PI * 2,
-      color: COLORS[Math.random() < 0.1 ? 3 : Math.floor(Math.random() * 3)],
-      alpha: 0.15 + Math.random() * 0.3,
-      pulseSpeed: 0.002 + Math.random() * 0.004,
+      r: 0.6 + Math.random() * 1.4,
+      vx: (Math.random() - 0.5) * 0.00045,
+      vy: -0.0002 - Math.random() * 0.0004,
+      a: 0.18 + Math.random() * 0.5,
     }));
 
     const resize = () => {
@@ -36,106 +31,45 @@ export default function ParticleField() {
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paint();
     };
-    resize();
-    window.addEventListener("resize", resize);
 
-    const onMouse = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-    };
-    canvas.addEventListener("mousemove", onMouse);
-    canvas.addEventListener("mouseleave", () => {
-      mouse.x = -1;
-      mouse.y = -1;
-    });
-
-    const draw = (time) => {
-      if (!running) return;
+    function paint() {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
-
-      dots.forEach((d) => {
-        if (!reduce) {
-          d.y -= d.v;
-          d.x += Math.sin(d.phase) * 0.00015 + d.vx;
-          d.phase += d.pulseSpeed;
-          if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); }
-          if (d.x < -0.02) d.x = 1.02;
-          if (d.x > 1.02) d.x = -0.02;
-        }
-
-        const px = d.x * w;
-        const py = d.y * h;
-        const pulseFactor = 0.7 + 0.3 * Math.sin(time * 0.001 + d.phase);
-        let alpha = d.alpha * pulseFactor;
-
-        // Mouse interaction – particles glow brighter near cursor
-        if (mouse.x >= 0) {
-          const dx = px - mouse.x;
-          const dy = py - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            alpha = Math.min(0.8, alpha + (1 - dist / 150) * 0.5);
-          }
-        }
-
-        // Draw glow
-        const gradient = ctx.createRadialGradient(px, py, 0, px, py, d.r * 4);
-        gradient.addColorStop(0, `rgba(${d.color}, ${alpha})`);
-        gradient.addColorStop(1, `rgba(${d.color}, 0)`);
+      for (const d of dots) {
         ctx.beginPath();
-        ctx.fillStyle = gradient;
-        ctx.arc(px, py, d.r * 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(77, 178, 255, ${d.a})`;
+        ctx.arc(d.x * w, d.y * h, d.r, 0, Math.PI * 2);
         ctx.fill();
-
-        // Core particle
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(${d.color}, ${alpha * 1.5})`;
-        ctx.arc(px, py, d.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw connection lines between nearby particles
-      if (!reduce) {
-        for (let i = 0; i < dots.length; i++) {
-          for (let j = i + 1; j < dots.length; j++) {
-            const dx = (dots[i].x - dots[j].x) * w;
-            const dy = (dots[i].y - dots[j].y) * h;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 100) {
-              const lineAlpha = (1 - dist / 100) * 0.08;
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(56, 189, 248, ${lineAlpha})`;
-              ctx.lineWidth = 0.5;
-              ctx.moveTo(dots[i].x * w, dots[i].y * h);
-              ctx.lineTo(dots[j].x * w, dots[j].y * h);
-              ctx.stroke();
-            }
-          }
-        }
       }
+    }
 
-      frame = requestAnimationFrame(draw);
+    const step = (t) => {
+      if (!start) start = t;
+      const k = Math.max(0, 1 - (t - start) / SETTLE_MS);
+      const damp = k * k * (3 - 2 * k); // smooth ease to zero
+      for (const d of dots) {
+        d.x += d.vx * damp;
+        d.y += d.vy * damp;
+        if (d.y < -0.02) d.y = 1.02;
+        if (d.x < -0.02) d.x = 1.02;
+        if (d.x > 1.02) d.x = -0.02;
+      }
+      paint();
+      if (damp > 0) frame = requestAnimationFrame(step);
     };
-    frame = requestAnimationFrame(draw);
+
+    resize();
+    window.addEventListener("resize", resize);
+    if (!reduce) frame = requestAnimationFrame(step);
 
     return () => {
-      running = false;
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousemove", onMouse);
     };
-  }, []);
+  }, [count]);
 
-  return (
-    <canvas
-      ref={ref}
-      className="absolute inset-0 h-full w-full"
-      style={{ pointerEvents: "auto" }}
-      aria-hidden="true"
-    />
-  );
+  return <canvas ref={ref} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />;
 }

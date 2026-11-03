@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { Link, useSearchParams } from "react-router-dom";
 import { getObject } from "../data/catalog.js";
 import { useExplore } from "../context/ExploreContext.jsx";
 import { localAgentReply } from "../lib/localAgent.js";
 
 const MODES = [
-  { id: "discover", label: "Discover", icon: "🔬", desc: "Explain the object" },
-  { id: "connect", label: "Connect", icon: "🔗", desc: "Find relationships" },
-  { id: "curiosity", label: "Curiosity", icon: "✨", desc: "What to explore next" },
-  { id: "challenge", label: "Challenge", icon: "🎯", desc: "Quick quiz" },
-  { id: "simulate", label: "Simulate", icon: "⚡", desc: "Thought experiment" },
+  { id: "discover", label: "Discover", desc: "Explain the specimen" },
+  { id: "connect", label: "Connect", desc: "Map its neighbours" },
+  { id: "curiosity", label: "Curiosity", desc: "Suggest a next stop" },
+  { id: "challenge", label: "Challenge", desc: "Write a one-item quiz" },
+  { id: "simulate", label: "Simulate", desc: "Run a thought experiment" },
 ];
 
 const PROMPTS = [
@@ -20,8 +19,6 @@ const PROMPTS = [
   "How do magnetic fields work?",
 ];
 
-const ease = [0.16, 1, 0.3, 1];
-
 export default function Ask() {
   const { selectedId, zoneId, history } = useExplore();
   const [params] = useSearchParams();
@@ -30,21 +27,21 @@ export default function Ask() {
   const [mode, setMode] = useState("discover");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [offline, setOffline] = useState(false);
   const [messages, setMessages] = useState([]);
-  const bottom = useRef(null);
+  const log = useRef(null);
 
+  // Scroll the transcript only — never the page.
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth" });
+    const el = log.current;
+    if (el && (messages.length || busy)) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
   const send = async (text) => {
-    const q = (text || input).trim();
+    const q = (text ?? input).trim();
     if (!q || busy) return;
     setInput("");
-    setError("");
-    const userMsg = { role: "user", content: q };
-    setMessages((m) => [...m, userMsg]);
+    setMessages((m) => [...m, { role: "user", content: q }]);
     setBusy(true);
     const payload = {
       message: q,
@@ -56,183 +53,147 @@ export default function Ask() {
         history: history.slice(-6),
       },
     };
+    let data;
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Agent HTTP " + res.status);
-      const data = await res.json();
-      setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content: data.reply,
-          disclaimer: data.disclaimer,
-          tool: data.tool,
-        },
-      ]);
+      if (!res.ok) throw new Error(`Agent HTTP ${res.status}`);
+      data = await res.json();
+      setOffline(false);
     } catch {
-      const data = localAgentReply(payload);
-      setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content: data.reply,
-          disclaimer: data.disclaimer,
-          tool: data.tool,
-        },
-      ]);
-      setError("Live model offline — using the on-site catalogue guide.");
-    } finally {
-      setBusy(false);
+      data = { ...localAgentReply(payload), source: "catalogue" };
+      setOffline(true);
     }
+    setMessages((m) => [
+      ...m,
+      { role: "assistant", content: data.reply, disclaimer: data.disclaimer, tool: data.tool, source: data.source },
+    ]);
+    setBusy(false);
   };
+
+  const activeMode = MODES.find((m) => m.id === mode);
 
   return (
     <div className="grid gap-10 lg:grid-cols-12">
-      {/* Sidebar */}
       <aside className="lg:col-span-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease }}
-        >
-          <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-[11px] font-medium tracking-wider uppercase text-accent/80">
-            <span className="text-sm">✦</span>
-            Ask the Invisible
-          </span>
-          <h1 className="display mt-6 text-[clamp(2rem,3vw+1rem,3rem)]">
-            Science <span className="gradient-text">guide</span>
-          </h1>
-          <p className="mt-4 text-sm text-muted/70 leading-relaxed">
-            Context: <span className="text-ink">{object ? object.name : "no specimen"}</span>
-            {zoneId ? ` · zone ${zoneId}` : ""}
-          </p>
-        </motion.div>
+        <p className="eyebrow">Ask the guide</p>
+        <h1 className="display mt-6 text-[clamp(2.5rem,3vw+1rem,3.5rem)]">Science guide</h1>
+        <p className="mt-4 text-sm text-muted">
+          Context:{" "}
+          {object ? (
+            <Link to={`/object/${object.id}`} className="text-ink underline-offset-4 hover:underline">
+              {object.name}
+            </Link>
+          ) : (
+            <span className="text-ink">no specimen selected</span>
+          )}
+        </p>
 
-        {/* Mode selector */}
-        <div className="mt-6 grid grid-cols-5 gap-1.5 sm:grid-cols-5 lg:grid-cols-1 lg:gap-2">
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMode(m.id)}
-              className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-200 ${
-                mode === m.id
-                  ? "glass text-accent"
-                  : "text-muted/60 hover:text-ink hover:bg-white/[0.03]"
-              }`}
-              style={mode === m.id ? { borderColor: "rgba(56, 189, 248, 0.2)" } : {}}
-            >
-              <span className="text-base lg:text-lg">{m.icon}</span>
-              <span className="hidden lg:inline">{m.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Sample prompts */}
-        <ul className="mt-6 space-y-2 hidden lg:block">
-          {PROMPTS.map((p) => (
-            <li key={p}>
+        <fieldset className="mt-8">
+          <legend className="eyebrow mb-3">Mode</legend>
+          <div className="flex flex-wrap gap-2 lg:flex-col lg:gap-1">
+            {MODES.map((m) => (
               <button
+                key={m.id}
                 type="button"
-                className="group w-full rounded-xl glass-card px-4 py-3 text-left text-sm text-muted/70 hover:text-ink transition-all"
-                onClick={() => send(p)}
+                onClick={() => setMode(m.id)}
+                aria-pressed={mode === m.id}
+                className={`flex min-h-11 items-center justify-between gap-4 rounded border px-4 text-left text-sm transition-colors duration-[140ms] active:bg-surface-2 lg:w-full ${
+                  mode === m.id
+                    ? "border-accent bg-surface text-ink"
+                    : "border-line text-muted hover:border-muted hover:text-ink"
+                }`}
               >
-                <span className="mr-2 text-accent/40 group-hover:text-accent transition-colors">→</span>
-                {p}
+                <span className="font-medium">{m.label}</span>
+                <span className="hidden text-xs text-muted lg:inline">{m.desc}</span>
               </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="mt-8">
+          <p className="eyebrow mb-3">Try</p>
+          <ul className="flex flex-col border-t border-line">
+            {PROMPTS.map((p) => (
+              <li key={p} className="border-b border-line">
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="flex min-h-11 w-full items-center py-2 text-left text-sm text-muted transition-colors duration-[140ms] hover:text-ink active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => send(p)}
+                >
+                  {p}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </aside>
 
-      {/* Chat area */}
-      <section className="flex min-h-[60dvh] flex-col rounded-3xl glass overflow-hidden lg:col-span-8">
-        <div className="flex-1 space-y-6 overflow-y-auto p-6">
+      <section className="flex h-[min(76dvh,720px)] flex-col border border-line bg-surface lg:col-span-8" aria-label="Conversation">
+        <div ref={log} className="flex-1 space-y-6 overflow-y-auto p-6" role="log" aria-live="polite">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center py-16">
-              <div className="text-5xl mb-6 opacity-30">✦</div>
-              <p className="text-muted/50 max-w-[40ch] leading-relaxed">
-                Ask a question. <span className="text-accent/50">Discover</span> explains the object.{" "}
-                <span className="text-accent/50">Connect</span> links ideas.{" "}
-                <span className="text-accent/50">Curiosity</span> suggests a next stop.{" "}
-                <span className="text-accent/50">Challenge</span> writes a quiz.{" "}
-                <span className="text-accent/50">Simulate</span> runs a thought experiment.
+            <div className="flex h-full flex-col justify-center">
+              <p className="font-mono text-xs uppercase tracking-[0.08em] text-accent">{activeMode.label}</p>
+              <p className="mt-3 max-w-[44ch] text-muted">
+                {activeMode.desc}. Answers draw on the {object ? `${object.name.toLowerCase()} dossier` : "on-site catalogue"}
+                {" "}and say when a picture is simplified.
               </p>
             </div>
           )}
-          <AnimatePresence initial={false}>
-            {messages.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease }}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[85%] rounded px-5 py-4 ${
+                  m.role === "user" ? "bg-surface-2" : "border-l-2 border-accent bg-bg"
+                }`}
               >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-5 py-4 ${
-                    m.role === "user"
-                      ? "bg-accent/10 text-ink"
-                      : "glass-card"
-                  }`}
-                >
-                  <p className="font-mono text-[10px] tracking-[0.1em] uppercase mb-2 ${
-                    m.role === 'user' ? 'text-accent/60' : 'text-accent-2/60'
-                  }">
-                    {m.role === "user" ? "You" : m.tool || "Guide"}
-                  </p>
-                  <p className="whitespace-pre-wrap text-ink text-sm leading-relaxed">{m.content}</p>
-                  {m.disclaimer && (
-                    <p className="mt-3 text-[11px] text-muted/40 leading-relaxed">{m.disclaimer}</p>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {busy && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-2"
-            >
-              <div className="flex gap-1">
-                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" style={{ animationDelay: "0ms" }} />
-                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" style={{ animationDelay: "150ms" }} />
-                <span className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse" style={{ animationDelay: "300ms" }} />
+                <p className={`mb-2 font-mono text-[11px] uppercase tracking-[0.08em] ${m.role === "user" ? "text-muted" : "text-accent"}`}>
+                  {m.role === "user" ? "You" : `${m.tool || "guide"}${m.source ? ` · ${m.source}` : ""}`}
+                </p>
+                <p className="whitespace-pre-wrap text-[15px] text-ink">{m.content}</p>
+                {m.disclaimer && <p className="mt-3 text-xs text-muted">{m.disclaimer}</p>}
               </div>
-              <span className="font-mono text-xs text-accent/60">Consulting the guide…</span>
-            </motion.div>
+            </div>
+          ))}
+
+          {busy && (
+            <p className="font-mono text-xs text-muted" role="status">
+              Consulting the catalogue…
+            </p>
           )}
-          {error && <p className="text-sm text-warn/70">{error}</p>}
-          <div ref={bottom} />
         </div>
 
-        {/* Input */}
+        {offline && (
+          <p className="border-t border-line px-6 py-3 text-xs text-muted">
+            Live model offline. Answers come from the on-site catalogue guide.
+          </p>
+        )}
+
         <form
-          className="flex gap-2 border-t border-line/30 p-4"
+          className="flex gap-2 border-t border-line p-4"
           onSubmit={(e) => {
             e.preventDefault();
             send();
           }}
         >
-          <label className="sr-only" htmlFor="ask">Question</label>
+          <label className="sr-only" htmlFor="ask">
+            Question
+          </label>
           <input
             id="ask"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="h-12 flex-1 rounded-xl bg-white/[0.03] px-4 text-sm text-ink placeholder:text-muted/40 focus:bg-white/[0.05] transition-colors"
-            placeholder="Ask about this scale of reality…"
+            className="field h-12 flex-1"
+            placeholder={object ? `Ask about ${object.name.toLowerCase()}…` : "Ask about a specimen…"}
             disabled={busy}
+            autoComplete="off"
           />
-          <button
-            type="submit"
-            disabled={busy || !input.trim()}
-            className="btn-primary h-12 px-6 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={busy || !input.trim()} className="btn-primary h-12">
             Send
           </button>
         </form>
