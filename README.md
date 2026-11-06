@@ -2,6 +2,10 @@
 
 **See the things your eyes can't.** InvisibleWorld is an interactive science website for students. Build an atom in 3D, look at its electron clouds, and zoom from a human hair all the way down to a nucleus.
 
+**Try it live: [invisible-world-seven.vercel.app](https://invisible-world-seven.vercel.app)**
+
+Jump straight to the [Atom lab](https://invisible-world-seven.vercel.app/atom).
+
 ## Screenshots
 
 ### Build an atom
@@ -47,14 +51,20 @@ Put `GEMINI_API_KEY` or `OPENAI_API_KEY` in `backend/.env` only. Never commit th
 
 ## Put it online
 
-The website is a static site, so it can be hosted for free on [Vercel](https://vercel.com):
+The live site is hosted on Vercel at https://invisible-world-seven.vercel.app. Every push to `main` updates it automatically.
+
+To host your own copy, use [Vercel](https://vercel.com). It's free, and the website is a static site:
 
 1. Sign in to Vercel with GitHub and click **Add New → Project**.
-2. Import this repository. Vercel detects Vite automatically (build command `npm run build`, output folder `dist`).
-3. Click **Deploy**. Every push to `main` updates the live site.
+2. Import this repository. If Vercel lists two parts, choose **Import single project** on the **app** (Vite) row. Keep the defaults: build command `npm run build`, output folder `dist`.
+3. Click **Deploy**.
 
 `vercel.json` makes page links like `/atom` work when they are opened directly.
 
 ## Built with
 
 React, Tailwind CSS, Framer Motion, Three.js with React Three Fiber, and FastAPI. The design system is described in [DESIGN.md](DESIGN.md).
+
+---
+
+<p align="center">Made with ❤️ by Bharani Sankar</p>
