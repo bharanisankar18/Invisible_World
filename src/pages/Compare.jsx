@@ -5,8 +5,8 @@ import { sci } from "../lib/format.js";
 const ease = [0.16, 1, 0.3, 1];
 
 function ratioLabel(n) {
-  if (n < 1.5) return "reference";
-  return `${Math.round(n).toLocaleString("en-US")}× narrower`;
+  if (n < 1.5) return "the reference";
+  return `${Math.round(n).toLocaleString("en-GB")}× narrower`;
 }
 
 export default function Compare() {
@@ -19,58 +19,53 @@ export default function Compare() {
   return (
     <div>
       <header className="max-w-[60ch]">
-        <p className="eyebrow">Compare · logarithmic</p>
-        <h1 className="display h1 mt-6">Hair to atom</h1>
-        <p className="mt-6 text-lg text-muted">
-          Linear bars would hide everything smaller than a cell. Each bar here is scaled by log₁₀ of its width, so an atom
-          and a hair fit on one page.
+        <h1 className="display h1">Hair to atom</h1>
+        <p className="mt-6 text-xl text-muted">
+          On an ordinary ruler everything smaller than a cell would be an invisible sliver. This ruler is logarithmic:
+          each step along it means ten times smaller, so a hair and an atom fit on one page.
         </p>
       </header>
 
-      <div className="mt-20 border-t border-line">
-        <div className="hidden grid-cols-12 gap-6 border-b border-line py-3 md:grid">
-          <span className="eyebrow col-span-3">Object</span>
-          <span className="eyebrow col-span-6">log₁₀ width</span>
-          <span className="eyebrow col-span-3 text-right">vs hair</span>
-        </div>
-        <ul>
-          {COMPARE.map((row, i) => {
-            const t = (Math.log10(row.meters) - min) / (max - min);
-            const width = 6 + t * 94;
-            return (
-              <li key={row.id} className="grid items-center gap-x-6 gap-y-3 border-b border-line py-6 md:grid-cols-12">
-                <div className="md:col-span-3">
-                  <h2 className="text-lg font-medium">{row.name}</h2>
-                  <p className="text-sm text-muted">{row.note}</p>
+      <ul className="mt-16 flex flex-col gap-3">
+        {COMPARE.map((row, i) => {
+          const t = (Math.log10(row.meters) - min) / (max - min);
+          const width = 6 + t * 94;
+          return (
+            <li key={row.id} className="panel grid items-center gap-x-6 gap-y-3 px-5 py-5 md:grid-cols-12 md:px-6">
+              <div className="md:col-span-3">
+                <h2 className="display text-[1.35rem]">{row.name}</h2>
+                <p className="text-sm text-muted">{row.note}</p>
+              </div>
+              <div className="md:col-span-6">
+                <div className="h-4 w-full overflow-hidden rounded-full bg-stage" role="presentation">
+                  <motion.div
+                    className="h-full origin-left rounded-full"
+                    style={{
+                      width: `${width}%`,
+                      background: "linear-gradient(90deg, #3D6BFF, #4FE3FF)",
+                      opacity: 0.45 + t * 0.55,
+                    }}
+                    initial={reduce ? false : { scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, delay: i * 0.07, ease }}
+                  />
                 </div>
-                <div className="md:col-span-6">
-                  <div className="h-3 w-full bg-surface" role="presentation">
-                    <motion.div
-                      className="h-full origin-left bg-accent"
-                      style={{ width: `${width}%`, opacity: 0.35 + t * 0.65 }}
-                      initial={reduce ? false : { scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.52, delay: i * 0.06, ease }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-baseline justify-between gap-4 font-mono text-sm tabular md:col-span-3 md:flex-col md:items-end md:gap-1">
-                  <span className="text-accent">{sci(row.meters)}</span>
-                  <span className="text-muted">{ratioLabel(ref / row.meters)}</span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 text-sm tabular md:col-span-3 md:flex-col md:items-end md:gap-1">
+                <span className="font-bold text-electron">{sci(row.meters)}</span>
+                <span className="text-muted">{ratioLabel(ref / row.meters)}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
-      <aside className="panel mt-16 max-w-[70ch] p-6">
-        <p className="illustrative">Typical values, not measurements</p>
-        <p className="mt-3 text-muted">
-          Stack hydrogen-scale atoms ({sci(atom.meters)}) across one 80 µm hair and you need about{" "}
-          <span className="font-mono tabular text-ink">{Math.round(ref / atom.meters).toLocaleString("en-US")}</span> of
-          them side by side.
+      <aside className="stage mt-12 max-w-[70ch] p-7">
+        <p className="illustrative">Typical sizes, not measurements</p>
+        <p className="mt-3 text-lg text-ink">
+          Line up hydrogen-sized atoms ({sci(atom.meters)}) across one 80 µm hair and you would need about{" "}
+          <strong className="tabular">{Math.round(ref / atom.meters).toLocaleString("en-GB")}</strong> of them.
         </p>
       </aside>
     </div>

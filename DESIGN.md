@@ -1,78 +1,65 @@
 ---
 name: InvisibleWorld
-description: Cinematic scientific exploration of microscopic, atomic, biological, electromagnetic and neural phenomena that exist beyond naked-eye vision.
+description: Interactive science site for students. Build an atom in 3D, explore its electron clouds, and zoom from a human hair down to a nucleus.
 colors:
-  bg: "#0E1626"
-  surface: "#152036"
-  text: "#E8EEF8"
-  muted: "#9AA9C2"
-  border: "#22304A"
-  accent: "#4DB2FF"
-  on-accent: "#04121F"
+  bg: "#0D1B4C"
+  surface: "#13245F"
+  surface-2: "#1A2E72"
+  stage: "#071034"
+  text: "#F3F6FF"
+  muted: "#AEBBE6"
+  line: "#2A3F8F"
+  proton: "#FF5D73"
+  neutron: "#D5DCF2"
+  electron: "#4FE3FF"
+  p-orbital: "#FFC23D"
+  d-orbital: "#9BFF5C"
 typography:
   display:
-    fontFamily: Mona Sans
+    fontFamily: Anybody (variable, wdth 50–150)
   body:
-    fontFamily: Mona Sans
-rounded:
-  default: "4px"
-spacing:
-  unit: "4px"
+    fontFamily: Atkinson Hyperlegible
 ---
 
 # InvisibleWorld: design system
 
-## Overview
-Cinematic scientific exploration of the unseen. **Midnight Instrument**: midnight blue to every edge, expanded-light titles like a film credit, photographs and diagrams treated as moonlight. The product is dark-only.
+## Idea: the cloud chamber
+A cloud chamber makes invisible particles leave visible trails. The site does the same:
+a Prussian-blue ground where every bright colour is a particle or an orbital.
 
-Signature move: a sparse azure particle field behind the landing headline, then stillness.
+## Colour carries physics
+| Colour | Means |
+| --- | --- |
+| Coral `#FF5D73` | proton, positive charge |
+| Pale `#D5DCF2` | neutron, neutral; fast muon tracks |
+| Cyan `#4FE3FF` | electron, negative charge, s orbitals, s-block |
+| Amber `#FFC23D` | p orbitals, p-block |
+| Lime `#9BFF5C` | d orbitals, d-block |
 
-## Colors
-- **bg** `#0E1626`
-- **surface** `#152036`
-- **surface-2** `#1A2740`
-- **text** `#E8EEF8`
-- **muted** `#9AA9C2`
-- **border** `#22304A`
-- **accent** `#4DB2FF`
-- **accentInk** `#04121F`
-- **warn** `#D4A017` (illustrative vs measured disclaimer only)
+Each orbital colour has a second, deeper shade for the opposite wave phase.
+Buttons are white on blue (`text` on `bg`) so that colour is never decoration.
+The periodic table uses the orbital colours, linking the table's blocks to the clouds.
 
-Accent covers at most 10% of any screen. No purple-blue gradients, no neon, no pure black.
+## Type
+- Display: Anybody, `wdth` 108, `wght` 760, tracking −0.018em.
+- Hero headline: lines widen from `wdth` 50 to 112 on load, staggered 140 ms, like letters under a lens.
+- Body: Atkinson Hyperlegible 17px / 1.6, built for legibility. No monospace, no all-caps labels.
 
-## Typography
-- Display: Mona Sans 300, width 125, tracking -0.01em
-- Body: Mona Sans 400, width 100
-- Mono (scale numerals): IBM Plex Mono
-- Body 16px, line-height 1.55, measure 45–65ch
-- h1 clamp(3rem, 6vw + 1rem, 6rem)
-
-## Layout
-- 8px base; section gaps 96 / 144 / 176px
-- Container ~1280px
-- Landing: marquee-hero (poster fold) then feature-stack of five zones
-- App screens: workbench (nav + stage)
-
-## Elevation and shape
-- Radius 0–4px, square-cut
-- Surfaces are lightness steps of the blue; hairline borders only when needed
-- No drop shadows, no frosted glass
+## Shape
+- Pills (999px) for buttons, chips and segmented controls.
+- 22px for panels, 28px for 3D stages, 10–14px for small controls.
+- No drop shadows except glows that represent light.
 
 ## Motion
-- Ease `cubic-bezier(0.16, 1, 0.3, 1)`
-- UI 140/260ms; large surfaces 520ms
-- Transform and opacity only; honour prefers-reduced-motion
-- One signature motion: landing title fade 0.6 → 1 over 520ms
+- One orchestrated hero: cloud-chamber tracks burst in, then trickle. Tap to fire a particle.
+- 3D motion explains physics: orbiting electrons, the jump-and-photon, nucleon jiggle, cloud twinkle.
+- Everything honours `prefers-reduced-motion` (static chamber photograph, still atom).
 
 ## Copy
-- Specific nouns and numbers. Banned: Unlock, Elevate, Seamless, Revolutionize, Supercharge, Get Started, Learn More.
-- Always label illustrative visualizations vs measured scientific values.
+- Sentence case, second person, plain verbs. Say what a button does.
+- Always say when a picture is simplified (`.illustrative`).
 
-## Do's and Don'ts
-- Don't: use pure black or neon
-- Don't: add frosted glass
-- Don't: light sections inside the dark build
-- Don't: add a second hue besides azure
-- Don't: three identical icon cards
-- Do: every control has hover, focus-visible, active, disabled
-- Do: 44px touch targets
+## Atom lab
+- Three views: Shells (Bohr), Clouds (sampled |ψ|² of hydrogen-like orbitals, radii compressed with r^0.6), Nucleus (fcc-packed nucleons).
+- Configuration chips light up a subshell; inside it, orbital chips with spin arrows isolate one orbital.
+- URL holds state: `/atom?z=11&n=12&e=10&view=shells` is Na⁺.

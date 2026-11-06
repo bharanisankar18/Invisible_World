@@ -17,15 +17,14 @@ export default class ErrorBoundary extends Component {
     if (!this.state.error) return this.props.children;
     return (
       <div className="flex min-h-[40dvh] flex-col items-start justify-center" role="alert">
-        <p className="eyebrow">Error</p>
-        <h1 className="display mt-4 text-4xl">This instrument failed to load.</h1>
+        <h1 className="display text-4xl">This page didn’t load.</h1>
         <p className="mt-4 max-w-[54ch] text-muted">{String(this.state.error?.message || this.state.error)}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
             Reload the page
           </button>
-          <Link to="/zones" className="btn-secondary">
-            Back to the five zones
+          <Link to="/" className="btn-secondary">
+            Go home
           </Link>
         </div>
       </div>

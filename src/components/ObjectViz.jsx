@@ -13,9 +13,11 @@ function Svg({ children, label }) {
 
 /** `label` overrides the accessible name (e.g. to hide the answer in Mystery). */
 export default function ObjectViz({ type, className = "", label = null }) {
-  const stroke = "#4DB2FF";
-  const dim = "#9AA9C2";
-  const fill = "rgba(77,178,255,0.12)";
+  const stroke = "#4FE3FF";
+  const dim = "#AEBBE6";
+  const fill = "rgba(79,227,255,0.12)";
+  const proton = "#FF5D73";
+  const neutron = "#D5DCF2";
 
   const map = {
     bacteria: (
@@ -71,11 +73,37 @@ export default function ObjectViz({ type, className = "", label = null }) {
       </Svg>
     ),
     atom: (
-      <Svg label="Schematic atom with nucleus and orbital rings">
-        <circle cx="100" cy="100" r="8" fill={stroke} />
-        <ellipse cx="100" cy="100" rx="70" ry="24" fill="none" stroke={stroke} transform="rotate(0 100 100)" />
-        <ellipse cx="100" cy="100" rx="70" ry="24" fill="none" stroke={dim} transform="rotate(60 100 100)" />
-        <ellipse cx="100" cy="100" rx="70" ry="24" fill="none" stroke={dim} transform="rotate(120 100 100)" />
+      <Svg label="Schematic atom: nucleus with electron shells">
+        <circle cx="100" cy="100" r="9" fill={proton} />
+        <circle cx="100" cy="100" r="40" fill="none" stroke={dim} strokeWidth="1" opacity="0.6" />
+        <circle cx="100" cy="100" r="72" fill="none" stroke={dim} strokeWidth="1" opacity="0.6" />
+        <circle cx="140" cy="100" r="5.5" fill={stroke} />
+        <circle cx="60" cy="100" r="5.5" fill={stroke} />
+        <circle cx="100" cy="28" r="5.5" fill={stroke} />
+        <circle cx="49" cy="151" r="5.5" fill={stroke} />
+        <circle cx="151" cy="151" r="5.5" fill={stroke} />
+        <circle cx="172" cy="100" r="5.5" fill={stroke} />
+      </Svg>
+    ),
+    nucleus: (
+      <Svg label="Schematic nucleus: packed protons and neutrons">
+        {[
+          [100, 100, 1],
+          [76, 92, 0],
+          [124, 92, 1],
+          [88, 120, 0],
+          [112, 120, 1],
+          [100, 76, 0],
+          [64, 116, 1],
+          [136, 116, 0],
+          [88, 72, 1],
+          [112, 72, 0],
+          [100, 140, 0],
+          [76, 140, 1],
+          [124, 140, 0],
+        ].map(([x, y, p], i) => (
+          <circle key={i} cx={x} cy={y} r="15" fill={p ? proton : neutron} stroke="#071034" strokeWidth="2" />
+        ))}
       </Svg>
     ),
     electron: (
@@ -87,8 +115,8 @@ export default function ObjectViz({ type, className = "", label = null }) {
     proton: (
       <Svg label="Schematic proton as three quarks">
         <circle cx="100" cy="100" r="48" fill={fill} stroke={stroke} />
-        <circle cx="86" cy="92" r="10" fill="none" stroke={stroke} />
-        <circle cx="114" cy="92" r="10" fill="none" stroke={stroke} />
+        <circle cx="86" cy="92" r="10" fill="none" stroke={proton} />
+        <circle cx="114" cy="92" r="10" fill="none" stroke={proton} />
         <circle cx="100" cy="118" r="10" fill="none" stroke={dim} />
       </Svg>
     ),

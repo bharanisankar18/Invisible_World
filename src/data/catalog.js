@@ -624,9 +624,3 @@ export function searchCatalog(q) {
     return blob.includes(s);
   });
 }
-
-/** "01"…"05" — zones are identified by order and scale, not by hue or emoji. */
-export function zoneNumber(id) {
-  const i = ZONES.findIndex((z) => z.id === id);
-  return i < 0 ? "··" : String(i + 1).padStart(2, "0");
-}

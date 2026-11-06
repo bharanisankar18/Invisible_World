@@ -32,7 +32,7 @@ function Controls({ autoRotate }) {
 const AZURE = "#4DB2FF";
 const PALE = "#A9D6FF";
 const SLATE = "#9AA9C2";
-const BG = "#0E1626";
+const BG = "#071034";
 
 /** A DOM label pinned to a 3D point: projected to screen space every frame. */
 function Label({ position, children }) {
