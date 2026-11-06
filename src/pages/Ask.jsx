@@ -79,21 +79,20 @@ export default function Ask() {
   return (
     <div className="grid gap-10 lg:grid-cols-12">
       <aside className="lg:col-span-4">
-        <p className="eyebrow">Ask the guide</p>
-        <h1 className="display mt-6 text-[clamp(2.5rem,3vw+1rem,3.5rem)]">Science guide</h1>
-        <p className="mt-4 text-sm text-muted">
-          Context:{" "}
+        <h1 className="display text-[clamp(2.75rem,1.8rem+3vw,4.25rem)]">Ask the guide</h1>
+        <p className="mt-4 text-muted">
+          Talking about:{" "}
           {object ? (
             <Link to={`/object/${object.id}`} className="text-ink underline-offset-4 hover:underline">
               {object.name}
             </Link>
           ) : (
-            <span className="text-ink">no specimen selected</span>
+            <span className="text-ink">anything on the site</span>
           )}
         </p>
 
         <fieldset className="mt-8">
-          <legend className="eyebrow mb-3">Mode</legend>
+          <legend className="mb-3 font-bold text-muted">What kind of answer?</legend>
           <div className="flex flex-wrap gap-2 lg:flex-col lg:gap-1">
             {MODES.map((m) => (
               <button
@@ -101,28 +100,26 @@ export default function Ask() {
                 type="button"
                 onClick={() => setMode(m.id)}
                 aria-pressed={mode === m.id}
-                className={`flex min-h-11 items-center justify-between gap-4 rounded border px-4 text-left text-sm transition-colors duration-[140ms] active:bg-surface-2 lg:w-full ${
-                  mode === m.id
-                    ? "border-accent bg-surface text-ink"
-                    : "border-line text-muted hover:border-muted hover:text-ink"
+                className={`flex min-h-11 items-center justify-between gap-4 rounded-2xl px-4 text-left text-[15px] transition-colors duration-150 lg:w-full ${
+                  mode === m.id ? "bg-ink text-accent-ink" : "bg-surface text-muted hover:bg-surface-2 hover:text-ink"
                 }`}
               >
-                <span className="font-medium">{m.label}</span>
-                <span className="hidden text-xs text-muted lg:inline">{m.desc}</span>
+                <span className="font-bold">{m.label}</span>
+                <span className={`hidden text-sm lg:inline ${mode === m.id ? "text-accent-ink/75" : "text-muted"}`}>{m.desc}</span>
               </button>
             ))}
           </div>
         </fieldset>
 
         <div className="mt-8">
-          <p className="eyebrow mb-3">Try</p>
+          <p className="mb-3 font-bold text-muted">Try one of these</p>
           <ul className="flex flex-col border-t border-line">
             {PROMPTS.map((p) => (
               <li key={p} className="border-b border-line">
                 <button
                   type="button"
                   disabled={busy}
-                  className="flex min-h-11 w-full items-center py-2 text-left text-sm text-muted transition-colors duration-[140ms] hover:text-ink active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex min-h-12 w-full items-center py-2 text-left text-[15px] text-muted transition-colors duration-150 hover:text-ink active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
                   onClick={() => send(p)}
                 >
                   {p}
@@ -133,11 +130,11 @@ export default function Ask() {
         </div>
       </aside>
 
-      <section className="flex h-[min(76dvh,720px)] flex-col border border-line bg-surface lg:col-span-8" aria-label="Conversation">
+      <section className="stage flex h-[min(76dvh,720px)] flex-col overflow-hidden lg:col-span-8" aria-label="Conversation">
         <div ref={log} className="flex-1 space-y-6 overflow-y-auto p-6" role="log" aria-live="polite">
           {messages.length === 0 && (
             <div className="flex h-full flex-col justify-center">
-              <p className="font-mono text-xs uppercase tracking-[0.08em] text-accent">{activeMode.label}</p>
+              <p className="display text-2xl">{activeMode.label}</p>
               <p className="mt-3 max-w-[44ch] text-muted">
                 {activeMode.desc}. Answers draw on the {object ? `${object.name.toLowerCase()} dossier` : "on-site catalogue"}
                 {" "}and say when a picture is simplified.
@@ -148,34 +145,36 @@ export default function Ask() {
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded px-5 py-4 ${
-                  m.role === "user" ? "bg-surface-2" : "border-l-2 border-accent bg-bg"
+                className={`max-w-[85%] rounded-[20px] px-5 py-4 ${
+                  m.role === "user" ? "rounded-br-md bg-ink text-accent-ink" : "rounded-bl-md bg-surface"
                 }`}
               >
-                <p className={`mb-2 font-mono text-[11px] uppercase tracking-[0.08em] ${m.role === "user" ? "text-muted" : "text-accent"}`}>
-                  {m.role === "user" ? "You" : `${m.tool || "guide"}${m.source ? ` · ${m.source}` : ""}`}
-                </p>
-                <p className="whitespace-pre-wrap text-[15px] text-ink">{m.content}</p>
+                {m.role !== "user" && (
+                  <p className="mb-1.5 text-sm font-bold text-electron">
+                    Guide{m.source === "catalogue" ? ", from the site’s notes" : ""}
+                  </p>
+                )}
+                <p className={`whitespace-pre-wrap text-[16px] ${m.role === "user" ? "" : "text-ink"}`}>{m.content}</p>
                 {m.disclaimer && <p className="mt-3 text-xs text-muted">{m.disclaimer}</p>}
               </div>
             </div>
           ))}
 
           {busy && (
-            <p className="font-mono text-xs text-muted" role="status">
-              Consulting the catalogue…
+            <p className="text-sm text-muted" role="status">
+              Thinking…
             </p>
           )}
         </div>
 
         {offline && (
           <p className="border-t border-line px-6 py-3 text-xs text-muted">
-            Live model offline. Answers come from the on-site catalogue guide.
+            The live guide isn’t running, so answers come from the site’s own notes.
           </p>
         )}
 
         <form
-          className="flex gap-2 border-t border-line p-4"
+          className="flex gap-2 border-t border-line/70 p-4"
           onSubmit={(e) => {
             e.preventDefault();
             send();
@@ -188,13 +187,13 @@ export default function Ask() {
             id="ask"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="field h-12 flex-1"
-            placeholder={object ? `Ask about ${object.name.toLowerCase()}…` : "Ask about a specimen…"}
+            className="field h-12 flex-1 rounded-full"
+            placeholder={object ? `Ask about ${object.name.toLowerCase()}` : "Ask something, like: why can’t we see atoms?"}
             disabled={busy}
             autoComplete="off"
           />
-          <button type="submit" disabled={busy || !input.trim()} className="btn-primary h-12">
-            Send
+          <button type="submit" disabled={busy || !input.trim()} className="btn-primary h-12 min-h-12">
+            Ask
           </button>
         </form>
       </section>

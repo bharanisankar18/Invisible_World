@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { SCALE_STEPS, getObject } from "../data/catalog.js";
 import ObjectCard from "../components/ObjectCard.jsx";
@@ -9,7 +10,7 @@ const HAIR = {
   name: "Human hair",
   viz: "hair-ref",
   sizeLabel: "~80 µm",
-  subtitle: "Keratin fibre, scalp typical",
+  subtitle: "Keratin fibre, typical scalp hair",
 };
 
 const ease = [0.16, 1, 0.3, 1];
@@ -27,34 +28,29 @@ export default function ScaleExplorer() {
   return (
     <div>
       <header className="grid gap-8 md:grid-cols-12">
-        <div className="md:col-span-7">
-          <p className="eyebrow">Scale explorer · {SCALE_STEPS.length} stops</p>
-          <h1 className="display h1 mt-6">Zoom into reality</h1>
-          <p className="mt-6 max-w-[54ch] text-lg text-muted">
-            Drag from human scale to the ångström. The drawings swap at each stop.
+        <div className="md:col-span-8">
+          <h1 className="display h1">Zoom into reality</h1>
+          <p className="mt-6 max-w-[54ch] text-xl text-muted">
+            Drag the slider from your own size down to a single atom. Each stop is a thousand times smaller than the one
+            before, until a last short hop down to the atom.
           </p>
         </div>
-        <p className="illustrative self-end md:col-span-4 md:col-start-9 md:justify-self-end">
-          Order-of-magnitude stops, not calibrated
-        </p>
+        <p className="illustrative self-end md:col-span-4 md:justify-self-end">Stops are rough powers of ten</p>
       </header>
 
-      {/* Instrument readout */}
-      <section className="mt-16 border border-line bg-surface p-6 md:p-10" aria-label="Scale control">
+      <section className="stage mt-12 p-6 md:p-10" aria-label="Zoom level">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="eyebrow">{step.label}</p>
-            <output htmlFor="scale" className="mt-2 block font-mono text-[clamp(2.5rem,6vw,4.5rem)] tabular leading-none text-accent">
+            <p className="text-sm font-bold text-muted">{step.label}</p>
+            <output htmlFor="scale" className="display mt-2 block text-[clamp(3rem,2rem+5vw,6rem)] leading-none text-electron tabular">
               {step.display}
             </output>
           </div>
-          <p className="font-mono text-sm tabular text-muted">
-            {sci(step.meters)}
-          </p>
+          <p className="text-muted tabular">{sci(step.meters)}</p>
         </div>
 
         <label htmlFor="scale" className="sr-only">
-          Scale
+          Zoom level
         </label>
         <input
           id="scale"
@@ -75,9 +71,9 @@ export default function ScaleExplorer() {
               type="button"
               onClick={() => setIndex(i)}
               aria-pressed={i === index}
-              className={`min-h-11 font-mono text-xs tabular transition-colors duration-[140ms] active:opacity-70 ${
+              className={`min-h-11 text-sm font-bold tabular transition-colors duration-150 ${
                 i === 0 ? "text-left" : i === SCALE_STEPS.length - 1 ? "text-right" : "text-center"
-              } ${i === index ? "text-accent" : "text-muted hover:text-ink"}`}
+              } ${i === index ? "text-ink" : "text-muted hover:text-ink"}`}
             >
               {s.display}
             </button>
@@ -88,30 +84,37 @@ export default function ScaleExplorer() {
       <AnimatePresence mode="wait">
         <motion.section
           key={step.id}
-          initial={reduce ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={reduce ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.26, ease }}
-          className="mt-24"
+          transition={{ duration: 0.3, ease }}
+          className="mt-16"
           aria-live="polite"
         >
           <div className="grid gap-8 md:grid-cols-12">
-            <h2 className="display text-[clamp(2rem,4vw,3rem)] md:col-span-6">{step.title}</h2>
+            <h2 className="display text-[clamp(2rem,1.4rem+2vw,3rem)] md:col-span-6">{step.title}</h2>
             <div className="md:col-span-5 md:col-start-8">
-              <p className="text-ink">{step.fact}</p>
+              <p className="text-lg text-ink">{step.fact}</p>
               <p className="mt-3 text-sm text-muted">{step.note}</p>
             </div>
           </div>
 
-          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((o) => (
               <li key={o.id}>
-                <ObjectCard object={o} to={o.id === "hair-ref" ? "/compare" : undefined} />
+                <ObjectCard object={o} to={o.id === "hair-ref" ? "/compare" : o.id === "atom" ? "/atom" : undefined} />
               </li>
             ))}
           </ul>
         </motion.section>
       </AnimatePresence>
+
+      <p className="mt-14 text-muted">
+        Want them all on one ruler?{" "}
+        <Link to="/compare" className="text-link">
+          Compare a hair with an atom
+        </Link>
+      </p>
     </div>
   );
 }
