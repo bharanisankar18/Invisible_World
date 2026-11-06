@@ -1,17 +1,38 @@
 # InvisibleWorld
 
-An interactive science site for students. Build any of the first 36 atoms in 3D, watch its electron clouds and nucleus, make an electron jump and see the light it gives out, then zoom from a human hair down to a nucleus.
+**See the things your eyes can't.** InvisibleWorld is an interactive science website for students. Build an atom in 3D, look at its electron clouds, and zoom from a human hair all the way down to a nucleus.
 
-## Run
+## Screenshots
 
-Frontend:
+### Build an atom
+Pick an element and add or remove protons, neutrons and electrons. The shell view shows electrons orbiting the nucleus.
+
+![Atom lab showing carbon-12 in the shell view](docs/screenshots/atom-lab-shells.png)
+
+### See the electron clouds
+The cloud view shows where electrons are most likely to be, the way quantum physics describes them.
+
+![Atom lab showing nitrogen-14 in the cloud view](docs/screenshots/atom-lab-clouds.png)
+
+## What you can do
+
+- **Atom lab:** build any of the first 36 elements and see it as shells, as electron clouds, or as a close-up of its nucleus.
+- **Make light:** make an electron jump and see the colour of light the element gives out.
+- **Zoom:** slide from human size down to a single atom.
+- **Explore:** bacteria, viruses, DNA, magnetic fields and neurons.
+- **Quiz:** guess the mystery object from a drawing and a clue.
+- **Ask:** ask the science guide a question.
+
+## Run it on your computer
 
 ```bash
 npm install
 npm run dev
 ```
 
-Backend (optional live model; catalogue answers work without keys):
+Then open http://localhost:5173.
+
+The Ask page can use a live AI model through the optional backend. Without it, the guide answers from the site's own notes.
 
 ```bash
 cd backend
@@ -22,8 +43,18 @@ copy .env.example .env
 uvicorn main:app --reload --port 8000
 ```
 
-Vite proxies `/api` to `http://127.0.0.1:8000`. Put `GEMINI_API_KEY` or `OPENAI_API_KEY` in `backend/.env` only.
+Put `GEMINI_API_KEY` or `OPENAI_API_KEY` in `backend/.env` only. Never commit that file.
 
-## Stack
+## Put it online
 
-React, Tailwind CSS v4, Framer Motion, Three.js 0.185.1 with React Three Fiber, FastAPI. Design system: see DESIGN.md. One science agent with discover / connect / curiosity / challenge / simulate modes.
+The website is a static site, so it can be hosted for free on [Vercel](https://vercel.com):
+
+1. Sign in to Vercel with GitHub and click **Add New → Project**.
+2. Import this repository. Vercel detects Vite automatically (build command `npm run build`, output folder `dist`).
+3. Click **Deploy**. Every push to `main` updates the live site.
+
+`vercel.json` makes page links like `/atom` work when they are opened directly.
+
+## Built with
+
+React, Tailwind CSS, Framer Motion, Three.js with React Three Fiber, and FastAPI. The design system is described in [DESIGN.md](DESIGN.md).
